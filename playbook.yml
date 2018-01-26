@@ -1,0 +1,247 @@
+---
+
+- name: Build Windows server.
+  hosts: all
+  tasks:
+    - name: install all critical and security updates
+      win_updates:
+        category_names:
+          - CriticalUpdates
+          - SecurityUpdates
+          - UpdateRollups
+        state: installed
+
+    - name: Create directory structure for custom install packages
+      win_file:
+        path: C:\tmp\install
+        state: directory
+
+    - name: Create data-transfer folder
+      win_file:
+        path: C:\data-transfer
+        state: directory
+
+    - name: Create scripts folder
+      win_file:
+        path: C:\scripts
+        state: directory
+
+    - name: Create a Data feed folder on C drive
+      win_file:
+        path: 'C:\DATA FEED COPY'
+        state: directory
+
+    - name:  Create job export folder on C drive
+      win_file:
+        path: C:\Job_Export
+        state: directory
+
+    - name: GET diskpart from S3 to localhost
+      aws_s3:
+        bucket: dq-config-bucket
+        object: /dq-data-ingest-server/partitioning.txt
+        dest: /tmp/partitioning.txt
+        mode: get
+      delegate_to: 127.0.0.1
+
+    - name: Copy diskpart
+      win_copy:
+        src: /tmp/partitioning.txt
+        dest: C:\tmp\install\partitioning.txt
+        force: yes
+
+    - name: Convert line endings from Linux to Windows (PowerShell)
+      win_shell: '(Get-Content "C:\tmp\install\partitioning.txt") -replace "`n", "`r`n" | Set-Content "C:\tmp\install\volume_partitioning.txt"'
+
+    - name: Run diskpart
+      win_shell: diskpart /s C:\tmp\install\volume_partitioning.txt
+      args:
+        executable: cmd.exe
+
+    - name: Create D drive folder structure
+      win_file:
+        path: D:\Releases
+        state: directory
+
+    - name: GET E drive folder structure script from S3 to localhost
+      aws_s3:
+        bucket: dq-config-bucket
+        object: /dq-data-ingest-server/folder_structure.bat
+        dest: /tmp/folder_structure.bat
+        mode: get
+      delegate_to: 127.0.0.1
+
+    - name: Copy E drive folder structure script
+      win_copy:
+        src: /tmp/folder_structure.bat
+        dest: C:\tmp\install\folder_structure.bat
+
+    - name: Setup E drive folder structure
+      win_command: C:\tmp\install\folder_structure.bat
+
+    - name: Install Cholocatey
+      win_shell: |
+        iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+        choco feature enable -n allowGlobalConfirmation
+
+    - name: Install python2.7
+      win_chocolatey:
+        name: python2
+        state: present
+
+    - name: Install python3
+      win_chocolatey:
+        name: python3
+        state: present
+
+    - name: Ensure that Python2.7 and Python3.6 are present on the global system path
+      win_path:
+        elements:
+        - 'C:\Python36'
+        - 'C:\Python27'
+        - 'C:\data-transfer'
+
+    - name: Install PyODBC
+      win_shell: pip3.exe install pyodbc
+      args:
+        executable: cmd.exe
+
+    - name: Install putty and plink
+      win_chocolatey:
+        name: putty
+        state: present
+
+    - name: GET GB loader config msi from S3 to localhost
+      aws_s3:
+        bucket: dq-config-bucket
+        object: /dq-data-ingest-server/greenplum-loaders-4.3.4.0-build-1-WinXP-x86_32.msi
+        dest: /tmp/greenplum-loaders-4.3.4.0-build-1-WinXP-x86_32.msi
+        mode: get
+      delegate_to: 127.0.0.1
+
+    - name: Copy GB loader config msi
+      win_copy:
+        src: /tmp/greenplum-loaders-4.3.4.0-build-1-WinXP-x86_32.msi
+        dest: C:\tmp\install\greenplum-loaders-4.3.4.0-build-1-WinXP-x86_32.msi
+        force: no
+
+    - name: Install GP loader
+      win_package:
+        path: C:\tmp\install\greenplum-loaders-4.3.4.0-build-1-WinXP-x86_32.msi
+        state: present
+
+    - name: Download PGAdmin3 1.18.1
+      win_shell: |
+        $url = "https://ftp.postgresql.org/pub/pgadmin/pgadmin3/v1.18.1/win32/pgadmin3-1.18.1.zip"
+        $output = "C:\tmp\install\pgadmin3-1.18.1.zip"
+        $wc = New-Object System.Net.WebClient
+        $wc.DownloadFile($url, $output)
+
+    - name: Unzip PGAdmin 1.18.1
+      win_unzip:
+        src: C:\tmp\install\pgadmin3-1.18.1.zip
+        dest: C:\tmp\install\pgadmin3-1.18.1
+        delete_archive: yes
+
+    - name: Install PGAdmin 1.18.1
+      win_package:
+        path: C:\tmp\install\pgadmin3-1.18.1\pgadmin3.msi
+        state: present
+
+    - name: Download PSQLODBC driver
+      win_shell: |
+        $url = "https://ftp.postgresql.org/pub/odbc/versions/msi/psqlodbc_10_01_0000-x64.zip"
+        $output = "C:\tmp\install\psqlodbc_10_01_0000-x64.zip"
+        $wc = New-Object System.Net.WebClient
+        $wc.DownloadFile($url, $output)
+
+    - name: Unzip PSQLODBC driver
+      win_unzip:
+        src: C:\tmp\install\psqlodbc_10_01_0000-x64.zip
+        dest: C:\tmp\install\psqlodbc_10_01_0000-x64
+        delete_archive: yes
+
+    - name: Install PSQL ODBC driver
+      win_package:
+        path: C:\tmp\install\psqlodbc_10_01_0000-x64\psqlodbc_x64.msi
+        state: present
+
+    - name: Setup PostgreSQL ODBC SystemDSN
+      win_shell: |
+        Add-OdbcDsn -Name "Data-Ingest" -DriverName "PostgreSQL Unicode(x64)" -DsnType "System" -SetPropertyValue @("Server=MyServer", "Username=ohmygod", "Password=SuperSecr3t", "Port=5432", "Trusted_Connection=Yes", "Database=database_name")
+
+    - name: Download Python 2.5.4
+      win_shell: |
+        $url = "https://www.python.org/ftp/python/2.5.4/python-2.5.4.msi"
+        $output = "C:\tmp\install\python-2.5.4.msi"
+        $wc = New-Object System.Net.WebClient
+        $wc.DownloadFile($url, $output)
+
+    - name: Install Python 2.5.4
+      win_package:
+        path: C:\tmp\install\python-2.5.4.msi
+        state: present
+
+    - name: Install data-transfer pre-reqs
+      win_command: pip3.exe install virtualenv virtualenvwrapper-win sqlalchemy==1.0.14 coverage==4.4.2 pytest==3.2.5 pytest-cov==2.5.1 pathlib==1.0.1 boto3==1.4.8 schedule==0.5.0 paramiko==2.4.0
+      args:
+        executable: cmd.exe
+
+    - name: Download data-transfer from Github
+      win_shell: |
+        $url = "https://github.com/UKHomeOffice/data-transfer/archive/master.zip"
+        $output = "C:\tmp\install\data-transfer-master.zip"
+        $wc = New-Object System.Net.WebClient
+        $wc.DownloadFile($url, $output)
+
+    - name: Unzip data-transfer
+      win_unzip:
+        src: C:\tmp\install\data-transfer-master.zip
+        dest: C:\data-transfer\
+        delete_archive: yes
+
+    - name: Create virtualenv for data-transfer
+      win_shell: mkvirtualenv -p C:\Python36\python.exe data-transfer
+
+    - name: GET Data transfer config from S3 to localhost
+      aws_s3:
+        bucket: dq-config-bucket
+        object: /dq-data-ingest-server/data_transfer.bat.zip
+        dest: /tmp/data_transfer.bat.zip
+        mode: get
+      delegate_to: 127.0.0.1
+
+    - name: Copy Data transfer config
+      win_copy:
+        src: /tmp/data_transfer.bat.zip
+        dest: C:\tmp\install\data_transfer.bat.zip
+        force: yes
+
+    - name: Unzip data transfer config
+      win_unzip:
+        src: C:\tmp\install\data_transfer.bat.zip
+        dest: C:\tmp\install
+        delete_archive: yes
+
+    - name: Convert line endings from Linux to Windows (PowerShell)
+      win_shell: '(Get-Content "C:\tmp\install\data_transfer.bat") -replace "`n", "`r`n" | Set-Content "C:\scripts\data_transfer.bat"'
+
+
+    - name: GET Data transfer config from S3 to localhost
+      aws_s3:
+        bucket: dq-config-bucket
+        object: /dq-data-ingest-server/AWS.EC2.Windows.CloudWatch.json.zip
+        dest: /tmp/AWS.EC2.Windows.CloudWatch.json.zip
+        mode: get
+      delegate_to: 127.0.0.1
+
+    - name: Copy Cloudwatch config file
+      win_copy:
+        src: /tmp/AWS.EC2.Windows.CloudWatch.json.zip
+        dest: C:\tmp\install\AWS.EC2.Windows.CloudWatch.json.zip
+
+    - name: Unzip Cloudwatch config file
+      win_unzip:
+        src: C:\tmp\install\AWS.EC2.Windows.Cloudwatch.json.zip
+        dest: C:\Program Files\Amazon\SSM\Plugins\awsCloudWatch
+        delete_archive: yes
