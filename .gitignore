@@ -1,6 +1,5 @@
 # Cache objects
 packer_cache/
-connection_plugins/
 
 # For built boxes
 *.box
