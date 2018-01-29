@@ -44,7 +44,7 @@
       "winrm_username": "Administrator",
       "winrm_use_ssl": true,
       "winrm_insecure": true,
-      "user_data_file": "./setupwrm.ps1",
+      "user_data_file": "./scripts/setupwrm.ps1",
       "instance_type": "t2.micro",
       "ami_name": "dq-data-ingest-server {{isotime | clean_ami_name}}",
       "ami_users": [
@@ -60,6 +60,13 @@
         "--connection", "packer",
         "--extra-vars", "ansible_shell_type=powershell ansible_shell_executable=None"
       ]
+    },
+    {
+      "type": "powershell",
+      "scripts": [
+          "./scripts/sysprep-ec2config.ps1",
+          "./scripts/sysprep-bundleconfig.ps1"
+        ]
     }
   ]
 }
