@@ -51,26 +51,3 @@ pipeline:
     when:
       event: push
       branch: master
-
-  packer-copy-mocks:
-    image: chrisns/packer-encrypt-copy
-    pull: true
-    commands:
-      - export filters="--owner 093401982388 --filters "Name=name,Values=dq-data-ingest*""
-      - export aws_id=${MOCK_ACC_ID}
-      - export aws_key=${MOCK_ACC_KEY}
-      - export region=eu-west-2
-      - export HOME=/home/packer
-      - cd /home/packer
-      - ./build.sh
-    when:
-      event: push
-      branch: master
-
-services:
-  dind:
-    image: docker:1.12-dind
-    privileged: true
-    command:
-      - "-s"
-      - "overlay"
