@@ -48,7 +48,7 @@
       "instance_type": "t2.micro",
       "ami_name": "dq-data-ingest-server {{isotime | clean_ami_name}}",
       "ami_users": [
-        "483846886818"
+        "093401982388"
       ]
     }
   ],
