@@ -37,6 +37,18 @@
         path: C:\Job_Export
         state: directory
 
+    - name: Download AWSCLI
+      win_shell: |
+        $url = "https://s3.amazonaws.com/aws-cli/AWSCLI64.msi"
+        $output = "C:\tmp\install\AWSCLI64.msi"
+        $wc = New-Object System.Net.WebClient
+        $wc.DownloadFile($url, $output)
+
+    - name: AWS CLI install
+      win_package:
+        path: C:\tmp\install\AWSCLI64.msi
+        state: present        
+
     - name:  GET config files from S3
       win_shell: |
         aws configure set aws_access_key_id '{{user_access_key}}'
