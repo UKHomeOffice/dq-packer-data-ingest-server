@@ -37,19 +37,15 @@
         path: C:\Job_Export
         state: directory
 
-    - name: GET diskpart from S3 to localhost
-      aws_s3:
-        bucket: dq-config-bucket
-        object: /dq-data-ingest-server/partitioning.txt
-        dest: /tmp/partitioning.txt
-        mode: get
-      delegate_to: 127.0.0.1
-
-    - name: Copy diskpart
-      win_copy:
-        src: /tmp/partitioning.txt
-        dest: C:\tmp\install\partitioning.txt
-        force: yes
+    - name:  GET config files from S3
+      win_shell: |
+        aws configure set aws_access_key_id '{{user_access_key}}'
+        aws configure set aws_secret_access_key '{{secret_access_key}}'
+        aws s3 cp s3://dq-config-bucket/dq-data-ingest-server/ C:\tmp\install\ --recursive
+        aws configure set aws_access_key_id None
+        aws configure set aws_secret_access_key None
+      args:
+        executable: powershell.exe
 
     - name: Convert line endings from Linux to Windows (PowerShell)
       win_shell: '(Get-Content "C:\tmp\install\partitioning.txt") -replace "`n", "`r`n" | Set-Content "C:\tmp\install\volume_partitioning.txt"'
@@ -63,19 +59,6 @@
       win_file:
         path: D:\Releases
         state: directory
-
-    - name: GET E drive folder structure script from S3 to localhost
-      aws_s3:
-        bucket: dq-config-bucket
-        object: /dq-data-ingest-server/folder_structure.bat
-        dest: /tmp/folder_structure.bat
-        mode: get
-      delegate_to: 127.0.0.1
-
-    - name: Copy E drive folder structure script
-      win_copy:
-        src: /tmp/folder_structure.bat
-        dest: C:\tmp\install\folder_structure.bat
 
     - name: Setup E drive folder structure
       win_command: C:\tmp\install\folder_structure.bat
@@ -111,20 +94,6 @@
       win_chocolatey:
         name: putty
         state: present
-
-    - name: GET GB loader config msi from S3 to localhost
-      aws_s3:
-        bucket: dq-config-bucket
-        object: /dq-data-ingest-server/greenplum-loaders-4.3.4.0-build-1-WinXP-x86_32.msi
-        dest: /tmp/greenplum-loaders-4.3.4.0-build-1-WinXP-x86_32.msi
-        mode: get
-      delegate_to: 127.0.0.1
-
-    - name: Copy GB loader config msi
-      win_copy:
-        src: /tmp/greenplum-loaders-4.3.4.0-build-1-WinXP-x86_32.msi
-        dest: C:\tmp\install\greenplum-loaders-4.3.4.0-build-1-WinXP-x86_32.msi
-        force: no
 
     - name: Install GP loader
       win_package:
@@ -167,10 +136,6 @@
         path: C:\tmp\install\psqlodbc_10_01_0000-x64\psqlodbc_x64.msi
         state: present
 
-    - name: Setup PostgreSQL ODBC SystemDSN
-      win_shell: |
-        Add-OdbcDsn -Name "Data-Ingest" -DriverName "PostgreSQL Unicode(x64)" -DsnType "System" -SetPropertyValue @("Server=MyServer", "Username=ohmygod", "Password=SuperSecr3t", "Port=5432", "Trusted_Connection=Yes", "Database=database_name")
-
     - name: Download Python 2.5.4
       win_shell: |
         $url = "https://www.python.org/ftp/python/2.5.4/python-2.5.4.msi"
@@ -195,51 +160,22 @@
         $wc = New-Object System.Net.WebClient
         $wc.DownloadFile($url, $output)
 
-    - name: Unzip data-transfer
-      win_unzip:
-        src: C:\tmp\install\data-transfer-master.zip
-        dest: C:\data-transfer\
-        delete_archive: yes
-
     - name: Create virtualenv for data-transfer
       win_shell: mkvirtualenv -p C:\Python36\python.exe data-transfer
-
-    - name: GET Data transfer config from S3 to localhost
-      aws_s3:
-        bucket: dq-config-bucket
-        object: /dq-data-ingest-server/data_transfer.bat.zip
-        dest: /tmp/data_transfer.bat.zip
-        mode: get
-      delegate_to: 127.0.0.1
-
-    - name: Copy Data transfer config
-      win_copy:
-        src: /tmp/data_transfer.bat.zip
-        dest: C:\tmp\install\data_transfer.bat.zip
-        force: yes
-
-    - name: Unzip data transfer config
-      win_unzip:
-        src: C:\tmp\install\data_transfer.bat.zip
-        dest: C:\tmp\install
-        delete_archive: yes
 
     - name: Convert line endings from Linux to Windows (PowerShell)
       win_shell: '(Get-Content "C:\tmp\install\data_transfer.bat") -replace "`n", "`r`n" | Set-Content "C:\scripts\data_transfer.bat"'
 
-
-    - name: GET Data transfer config from S3 to localhost
-      aws_s3:
-        bucket: dq-config-bucket
-        object: /dq-data-ingest-server/AWS.EC2.Windows.CloudWatch.json.zip
-        dest: /tmp/AWS.EC2.Windows.CloudWatch.json.zip
-        mode: get
-      delegate_to: 127.0.0.1
-
-    - name: Copy Cloudwatch config file
-      win_copy:
-        src: /tmp/AWS.EC2.Windows.CloudWatch.json.zip
-        dest: C:\tmp\install\AWS.EC2.Windows.CloudWatch.json.zip
+    - name: Setup scheduled task for Data-transfer
+      win_shell: |
+        $action = New-ScheduledTaskAction -Execute C:\scripts\data_transfer.bat
+        $trigger = New-ScheduledTaskTrigger -Daily -At (Get-Date)
+        $description = "Run Data-transfer every minute forever."
+        $principal = New-ScheduledTaskPrincipal -UserID "NT AUTHORITY\SYSTEM" -LogonType ServiceAccount -RunLevel Highest
+        $task = Register-ScheduledTask -TaskName "Data_Transfer_2" -Trigger $trigger -Action $action -Description $description -Principal $principal
+        $task.Triggers.Repetition.Duration = "P1D"
+        $task.Triggers.Repetition.Interval = "PT1M"
+        $task | Set-ScheduledTask
 
     - name: Unzip Cloudwatch config file
       win_unzip:
