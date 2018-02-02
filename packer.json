@@ -12,11 +12,11 @@
       "source_ami_filter": {
         "filters": {
           "virtualization-type": "hvm",
-          "name": "Windows_Server-2012-R2_RTM-English-64Bit-Base-*",
+          "name": "base-win-2012-ami*",
           "root-device-type": "ebs"
         },
         "owners": [
-          "801119661308"
+          "093401982388"
         ],
         "most_recent": true
       },
@@ -45,7 +45,7 @@
       "winrm_use_ssl": true,
       "winrm_insecure": true,
       "user_data_file": "./scripts/setupwrm.ps1",
-      "instance_type": "t2.micro",
+      "instance_type": "t2.medium",
       "ami_name": "dq-data-ingest-server {{isotime | clean_ami_name}}",
       "ami_users": [
         "483846886818",
