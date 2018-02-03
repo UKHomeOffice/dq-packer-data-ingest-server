@@ -37,6 +37,24 @@
         path: C:\Job_Export
         state: directory
 
+    - name: Create PSTools directory
+      win_file:
+        path: C:\PSTools
+        state: directory
+
+    - name: Download PsTools
+      win_shell: |
+        $url = "https://download.sysinternals.com/files/PSTools.zip"
+        $output = "C:\tmp\install\PSTools.zip"
+        $wc = New-Object System.Net.WebClient
+        $wc.DownloadFile($url, $output)
+
+    - name: Unzip PsTools
+      win_unzip:
+        src: C:\tmp\install\PSTools.zip
+        dest: C:\PSTools\
+        delete_archive: yes
+
     - name: Download AWSCLI
       win_shell: |
         $url = "https://s3.amazonaws.com/aws-cli/AWSCLI64.msi"
@@ -47,7 +65,7 @@
     - name: AWS CLI install
       win_package:
         path: C:\tmp\install\AWSCLI64.msi
-        state: present        
+        state: present
 
     - name:  GET config files from S3
       win_shell: |
@@ -96,6 +114,7 @@
         - 'C:\Python36'
         - 'C:\Python27'
         - 'C:\data-transfer'
+        - 'C:\PSTools'
 
     - name: Install PyODBC
       win_shell: pip3.exe install pyodbc
