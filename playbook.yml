@@ -72,10 +72,11 @@
         aws configure set aws_access_key_id '{{user_access_key}}'
         aws configure set aws_secret_access_key '{{secret_access_key}}'
         aws s3 cp s3://dq-config-bucket/dq-data-ingest-server/ C:\tmp\install\ --recursive
-        aws configure set aws_access_key_id None
-        aws configure set aws_secret_access_key None
       args:
         executable: powershell.exe
+
+    - name: Delete AWS config
+      win_command: DEL C:\Users\Administrator\.aws\credentials
 
     - name: Convert line endings from Linux to Windows (PowerShell)
       win_shell: '(Get-Content "C:\tmp\install\partitioning.txt") -replace "`n", "`r`n" | Set-Content "C:\tmp\install\volume_partitioning.txt"'
