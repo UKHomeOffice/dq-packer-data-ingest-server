@@ -191,6 +191,12 @@
         $wc = New-Object System.Net.WebClient
         $wc.DownloadFile($url, $output)
 
+    - name: Unzip data-transfer
+      win_unzip:
+        src: C:\tmp\install\data-transfer-master.zip
+        dest: C:\data-transfer\
+        delete_archive: yes
+
     - name: Create virtualenv for data-transfer
       win_shell: mkvirtualenv -p C:\Python36\python.exe data-transfer
 
