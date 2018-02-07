@@ -201,7 +201,7 @@
       win_shell: mkvirtualenv -p C:\Python36\python.exe data-transfer
 
     - name: Convert line endings from Linux to Windows (PowerShell)
-      win_shell: '(Get-Content "C:\tmp\install\data_transfer.bat") -replace "`n", "`r`n" | Set-Content "C:\scripts\data_transfer_config.bat"'
+      win_shell: '(Get-Content "C:\tmp\install\data_transfer.bat") -replace "`n", "`r`n" | Set-Content "C:\scripts\data_transfer.bat"'
 
     - name: Setup scheduled task for Data-transfer
       win_shell: |
@@ -209,7 +209,7 @@
         $trigger = New-ScheduledTaskTrigger -Daily -At (Get-Date)
         $description = "Run Data-transfer every minute forever."
         $principal = New-ScheduledTaskPrincipal -UserID "NT AUTHORITY\SYSTEM" -LogonType ServiceAccount -RunLevel Highest
-        $task = Register-ScheduledTask -TaskName "Data_Transfer_2" -Trigger $trigger -Action $action -Description $description -Principal $principal
+        $task = Register-ScheduledTask -TaskName "Data_Transfer_S3_to_local" -Trigger $trigger -Action $action -Description $description -Principal $principal
         $task.Triggers.Repetition.Duration = "P1D"
         $task.Triggers.Repetition.Interval = "PT1M"
         $task | Set-ScheduledTask
