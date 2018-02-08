@@ -37,6 +37,11 @@
         path: C:\Job_Export
         state: directory
 
+    - name:  Create XML processing temp folder
+      win_file:
+        path: C:\XML_staging
+        state: directory
+
     - name: Create PSTools directory
       win_file:
         path: C:\PSTools
@@ -218,6 +223,26 @@
         $task.Triggers.Repetition.Duration = "P1D"
         $task.Triggers.Repetition.Interval = "PT1M"
         $task | Set-ScheduledTask
+
+    - name: Download scripts repo from Github
+      win_shell: |
+        $url = "https://github.com/UKHomeOffice/dq-xml_processing/archive/master.zip"
+        $output = "C:\tmp\install\dq-xml_processing-master.zip"
+        $wc = New-Object System.Net.WebClient
+        $wc.DownloadFile($url, $output)
+
+    - name: Unzip XML processing
+      win_unzip:
+        src: C:\tmp\install\dq-xml_processing-master.zip
+        dest: C:\XML_staging
+        delete_archive: yes
+
+    - name: Move XML processing files
+      win_shell: |
+        $extractPath = "C:\XML_staging"
+        $destinationPath = "E:\dq\nrt\s4_file_ingest\scripts"
+        Get-ChildItem $extractPath\dq-xml_processing-master | Copy -Destination $destinationPath -Recurse
+        Remove-Item $extractPath -Recurse -Force
 
     - name: Unzip Cloudwatch config file
       win_unzip:
