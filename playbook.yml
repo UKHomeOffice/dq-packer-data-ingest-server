@@ -100,9 +100,6 @@
         path: D:\Releases
         state: directory
 
-    - name: Install PyODBC for Python27
-      win_command: C:\Python27\python.exe -m pip install pyodbc
-
     - name: Install Cholocatey
       win_shell: |
         iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
@@ -140,7 +137,12 @@
       win_command: C:\tmp\install\folder_structure.bat
 
     - name: Install PIP for Python27
-      win_command: C:\Python27\python.exe C:\tmp\install\get-pip.py        
+      win_shell: |
+        C:\Python27\python.exe C:\tmp\install\get-pip.py
+
+    - name: Install PyODBC for Python27
+      win_shell: |
+        C:\Python27\python.exe -m pip install pyodbc
 
     - name: Install GP loader
       win_package:
