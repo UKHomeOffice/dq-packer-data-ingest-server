@@ -100,12 +100,6 @@
         path: D:\Releases
         state: directory
 
-    - name: Setup E drive folder structure
-      win_command: C:\tmp\install\folder_structure.bat
-
-    - name: Install PIP for Python27
-      win_command: C:\Python27\python.exe C:\tmp\install\get-pip.py
-
     - name: Install PyODBC for Python27
       win_command: C:\Python27\python.exe -m pip install pyodbc
 
@@ -141,6 +135,12 @@
       win_chocolatey:
         name: putty
         state: present
+
+    - name: Setup E drive folder structure
+      win_command: C:\tmp\install\folder_structure.bat
+
+    - name: Install PIP for Python27
+      win_command: C:\Python27\python.exe C:\tmp\install\get-pip.py        
 
     - name: Install GP loader
       win_package:
