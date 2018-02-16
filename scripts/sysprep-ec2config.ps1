@@ -9,10 +9,6 @@ foreach ($element in $xmlElementToModify.Plugin)
     {
         $element.State="Enabled"
     }
-    elseif ($element.name -eq "Ec2SetComputerName")
-    {
-        $element.State="Enabled"
-    }
     elseif ($element.name -eq "Ec2HandleUserData")
     {
         $element.State="Enabled"
