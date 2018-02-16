@@ -123,8 +123,8 @@
         - 'C:\data-transfer'
         - 'C:\PSTools'
 
-    - name: Install PyODBC
-      win_shell: pip3.exe install pyodbc
+    - name: Install Python36 modules
+      win_shell: pip3.exe install pyodbc psycopg2
       args:
         executable: cmd.exe
 
@@ -184,6 +184,10 @@
       win_package:
         path: C:\tmp\install\psqlodbc_10_01_0000-x64\psqlodbc_x64.msi
         state: present
+
+    - name: Install Python27 modules
+      win_shell: |
+        C:\Python27\python.exe pip -m install pygresql psycopg2 paramiko
 
     - name: Download Python 2.5.4
       win_shell: |
@@ -325,9 +329,17 @@
         $task | Set-ScheduledTask
         Disable-ScheduledTask -TaskName Data_Transfer_RAW_Archive_to_S3
 
-    - name: Open port 22 for WS
+    - name: Firewall rules
       win_shell: |
+        Set-NetFirewallProfile -Profile Domain -Enabled False
+        Set-NetFirewallRule -Group "@FirewallAPI.dll,-28502" -Direction Inbound -Profile Domain -Enabled True
         New-NetFirewallRule -DisplayName "Wherescape Port 22 inbound" -Direction Inbound -Protocol TCP -LocalPort 22 -RemoteAddress 10.1.8.0/24 -Action Allow
+        New-NetFirewallRule -DisplayName "Gpfdist TCP" -Direction Inbound -Protocol TCP -LocalPort Any -RemoteAddress Any -Program "C:\Program Files (x86)\Greenplum\greenplum-loaders-4.3.4.0-build-1\bin\gpfdist.exe"-Profile Public -Action Block
+        New-NetFirewallRule -DisplayName "Gpfdist UDP" -Direction Inbound -Protocol UDP -LocalPort Any -RemoteAddress Any -Program "C:\Program Files (x86)\Greenplum\greenplum-loaders-4.3.4.0-build-1\bin\gpfdist.exe"-Profile Public -Action Block
+
+    - name: Rename computer
+      win_shell: |
+        Rename-Computer -NewName DATA-INGEST1
 
     - name: Unzip Cloudwatch config file
       win_unzip:
