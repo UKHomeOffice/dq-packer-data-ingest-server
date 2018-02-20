@@ -140,10 +140,6 @@
       win_shell: |
         C:\Python27\python.exe C:\tmp\install\get-pip.py
 
-    - name: Install PyODBC for Python27
-      win_shell: |
-        C:\Python27\python.exe -m pip install pyodbc
-
     - name: Install GP loader
       win_package:
         path: C:\tmp\install\greenplum-loaders-4.3.4.0-build-1-WinXP-x86_32.msi
@@ -203,6 +199,23 @@
 
     - name: Install data-transfer pre-reqs
       win_command: pip3.exe install virtualenv virtualenvwrapper-win sqlalchemy==1.0.14 coverage==4.4.2 pytest==3.2.5 pytest-cov==2.5.1 pathlib==1.0.1 boto3==1.4.8 schedule==0.5.0 paramiko==2.4.0
+      args:
+        executable: cmd.exe
+
+    - name: Set PYTHONPATH
+      win_path:
+        name: PYTHONPATH
+        elements:
+        - 'C:\Python27'
+        - 'C:\Python25'
+        - 'C:\Python36'
+        - '%GPHOME_LOADERS%bin\lib'
+        scope: machine
+        state: present
+
+    - name: Install modules for Python27
+      win_shell: |
+        pip2 install pyodbc pygresql paramiko psycopg2
       args:
         executable: cmd.exe
 
