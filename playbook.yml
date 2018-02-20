@@ -100,9 +100,6 @@
         path: D:\Releases
         state: directory
 
-    - name: Install PyODBC for Python27
-      win_command: C:\Python27\python.exe -m pip install pyodbc
-
     - name: Install Cholocatey
       win_shell: |
         iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
@@ -140,7 +137,7 @@
       win_command: C:\tmp\install\folder_structure.bat
 
     - name: Install PIP for Python27
-      win_command: C:\Python27\python.exe C:\tmp\install\get-pip.py        
+      win_command: C:\Python27\python.exe C:\tmp\install\get-pip.py
 
     - name: Install GP loader
       win_package:
@@ -197,6 +194,23 @@
 
     - name: Install data-transfer pre-reqs
       win_command: pip3.exe install virtualenv virtualenvwrapper-win sqlalchemy==1.0.14 coverage==4.4.2 pytest==3.2.5 pytest-cov==2.5.1 pathlib==1.0.1 boto3==1.4.8 schedule==0.5.0 paramiko==2.4.0
+      args:
+        executable: cmd.exe
+
+    - name: Set PYTHONPATH
+      win_path:
+        name: PYTHONPATH
+        elements:
+        - 'C:\Python27'
+        - 'C:\Python25'
+        - 'C:\Python36'
+        - '%GPHOME_LOADERS%bin\lib'
+        scope: machine
+        state: present
+
+    - name: Install modules for Python27
+      win_shell: |
+        pip2 install pyodbc pygresql paramiko psycopg2
       args:
         executable: cmd.exe
 
