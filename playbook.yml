@@ -181,10 +181,6 @@
         path: C:\tmp\install\psqlodbc_10_01_0000-x64\psqlodbc_x64.msi
         state: present
 
-    - name: Install Python27 modules
-      win_shell: |
-        C:\Python27\python.exe pip -m install pygresql psycopg2 paramiko
-
     - name: Download Python 2.5.4
       win_shell: |
         $url = "https://www.python.org/ftp/python/2.5.4/python-2.5.4.msi"

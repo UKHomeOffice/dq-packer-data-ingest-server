@@ -1,30 +1,25 @@
 pipeline:
 
-
-  linux-packer-validate:
+  validate:
     image: chrisns/packer-ansible
     commands:
       - export HOME=/home/packer
       - packer validate packer.json
 
-  linux-packer-inspect:
+  inspect:
     image: chrisns/packer-ansible
     commands:
       - export HOME=/home/packer
       - packer inspect packer.json
 
-  linux-packer-build:
+  build:
     image: chrisns/packer-ansible
     commands:
       - export HOME=/home/packer
       - packer build packer.json
-    when:
-      event: push
-      branch: master
 
   packer-copy-prod:
     image: chrisns/packer-encrypt-copy
-    pull: true
     commands:
       - export filters="--owner 093401982388 --filters "Name=name,Values=dq-data-ingest*""
       - export aws_id=${PROD_ACC_ID}
@@ -39,7 +34,6 @@ pipeline:
 
   packer-copy-notprod:
     image: chrisns/packer-encrypt-copy
-    pull: true
     commands:
       - export filters="--owner 093401982388 --filters "Name=name,Values=dq-data-ingest*""
       - export aws_id=${NOTPROD_ACC_ID}
