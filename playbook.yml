@@ -48,11 +48,9 @@
         state: directory
 
     - name: Download PsTools
-      win_shell: |
-        $url = "https://download.sysinternals.com/files/PSTools.zip"
-        $output = "C:\tmp\install\PSTools.zip"
-        $wc = New-Object System.Net.WebClient
-        $wc.DownloadFile($url, $output)
+      win_get_url:
+        url: https://download.sysinternals.com/files/PSTools.zip
+        dest: C:\tmp\install\PSTools.zip
 
     - name: Unzip PsTools
       win_unzip:
@@ -61,11 +59,9 @@
         delete_archive: yes
 
     - name: Download AWSCLI
-      win_shell: |
-        $url = "https://s3.amazonaws.com/aws-cli/AWSCLI64.msi"
-        $output = "C:\tmp\install\AWSCLI64.msi"
-        $wc = New-Object System.Net.WebClient
-        $wc.DownloadFile($url, $output)
+      win_get_url:
+        url: https://s3.amazonaws.com/aws-cli/AWSCLI64.msi
+        dest: C:\tmp\install\AWSCLI64.msi
 
     - name: AWS CLI install
       win_package:
@@ -146,11 +142,9 @@
         state: present
 
     - name: Download PGAdmin3 1.18.1
-      win_shell: |
-        $url = "https://ftp.postgresql.org/pub/pgadmin/pgadmin3/v1.18.1/win32/pgadmin3-1.18.1.zip"
-        $output = "C:\tmp\install\pgadmin3-1.18.1.zip"
-        $wc = New-Object System.Net.WebClient
-        $wc.DownloadFile($url, $output)
+      win_get_url:
+        url: https://ftp.postgresql.org/pub/pgadmin/pgadmin3/v1.18.1/win32/pgadmin3-1.18.1.zip
+        dest: C:\tmp\install\pgadmin3-1.18.1.zip
 
     - name: Unzip PGAdmin 1.18.1
       win_unzip:
@@ -164,11 +158,9 @@
         state: present
 
     - name: Download PSQLODBC driver
-      win_shell: |
-        $url = "https://ftp.postgresql.org/pub/odbc/versions/msi/psqlodbc_10_01_0000-x64.zip"
-        $output = "C:\tmp\install\psqlodbc_10_01_0000-x64.zip"
-        $wc = New-Object System.Net.WebClient
-        $wc.DownloadFile($url, $output)
+      win_get_url:
+        url: https://ftp.postgresql.org/pub/odbc/versions/msi/psqlodbc_10_01_0000-x64.zip
+        dest: C:\tmp\install\psqlodbc_10_01_0000-x64.zip
 
     - name: Unzip PSQLODBC driver
       win_unzip:
@@ -182,11 +174,9 @@
         state: present
 
     - name: Download Python 2.5.4
-      win_shell: |
-        $url = "https://www.python.org/ftp/python/2.5.4/python-2.5.4.msi"
-        $output = "C:\tmp\install\python-2.5.4.msi"
-        $wc = New-Object System.Net.WebClient
-        $wc.DownloadFile($url, $output)
+      win_get_url:
+        url: https://www.python.org/ftp/python/2.5.4/python-2.5.4.msi
+        dest: C:\tmp\install\python-2.5.4.msi
 
     - name: Install Python 2.5.4
       win_package:
@@ -216,11 +206,9 @@
         executable: cmd.exe
 
     - name: Download data-transfer from Github
-      win_shell: |
-        $url = "https://github.com/UKHomeOffice/data-transfer/archive/master.zip"
-        $output = "C:\tmp\install\data-transfer-master.zip"
-        $wc = New-Object System.Net.WebClient
-        $wc.DownloadFile($url, $output)
+      win_get_url:
+        url: https://github.com/UKHomeOffice/data-transfer/archive/master.zip
+        dest: C:\tmp\install\data-transfer-master.zip
 
     - name: Unzip data-transfer
       win_unzip:
@@ -247,11 +235,9 @@
         Disable-ScheduledTask -TaskName Data_Transfer_S3_to_local
 
     - name: Download scripts repo from Github
-      win_shell: |
-        $url = "https://github.com/UKHomeOffice/dq-xml_processing/archive/master.zip"
-        $output = "C:\tmp\install\dq-xml_processing-master.zip"
-        $wc = New-Object System.Net.WebClient
-        $wc.DownloadFile($url, $output)
+      win_get_url:
+        url: https://github.com/UKHomeOffice/dq-xml_processing/archive/master.zip
+        dest: C:\tmp\install\dq-xml_processing-master.zip
 
     - name: Unzip XML processing
       win_unzip:
