@@ -70,16 +70,7 @@
 
     - name:  GET config files from S3
       win_shell: |
-        aws configure set aws_access_key_id '{{user_access_key}}'
-        aws configure set aws_secret_access_key '{{secret_access_key}}'
         aws s3 cp s3://dq-config-bucket/dq-data-ingest-server/ C:\tmp\install\ --recursive
-      args:
-        executable: powershell.exe
-
-    - name: Delete AWS CLI config
-      win_shell: |
-        $folders = "'C:\Windows\System32\config\systemprofile\.aws\','C:\Users\Administrator\.aws\'"
-        Get-ChildItem $folders -r -filter credentials | Remove-Item
       args:
         executable: powershell.exe
 
